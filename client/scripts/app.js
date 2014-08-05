@@ -29,14 +29,20 @@ app.fetch = function(){
 
 // adds messages to HTML
 app.addMessage = function(message) {
-  // console.log(_);
+  var insert;
+  if (app.friends.indexOf(message.username) >= 0) {
+    insert = "<b>"+ _.escape(message.text) +'</b>';
+  } else {
+    insert = _.escape(message.text);
+  }
+
   $("#chats").append('<li>'
                       + '<a href="#" class="username">'
                       + _.escape(message.username)
                       + '</a>'
                       +": "
                       + '<span>'
-                      + _.escape(message.text)
+                      + insert
                       + '</span>'
                       +'</li>');
 }
