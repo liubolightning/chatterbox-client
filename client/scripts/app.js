@@ -3,8 +3,12 @@ app.server = "https://api.parse.com/1/classes/chatterbox";
 app.displayLength = 10;
 app.friends = [];
 
-app.init = function(){};
+// run initial fetch
+app.init = function() {
+  app.fetch();
+}
 
+// fetches data from server
 app.fetch = function(){
   $.ajax({
     url: app.server,
@@ -12,18 +16,18 @@ app.fetch = function(){
     data: 'order=-createdAt',
     contentType: 'application/json',
     success: function(data){
-      console.log(data); // not necessary
       app.clearMessages();
-      for (var i = 0; i < 10; i++) {
+      for (var i = 0; i < app.displayLength; i++) {
         app.addMessage(data.results[i]);
       }
     },
     error: function(){
-      console.log("Error happened during fetch.");
+      console.log("Chatterbox: error occurred during fetch.");
     }
   });
-};
+}
 
+// adds messages to HTML
 app.addMessage = function(message) {
   // console.log(_);
   $("#chats").append('<li>'
@@ -37,10 +41,12 @@ app.addMessage = function(message) {
                       +'</li>');
 }
 
+// removes messages from #chats
 app.clearMessages = function() {
   $("#chats").empty();
 }
 
+// sends inputted message to server
 app.send = function(message) {
   $.ajax({
     url: app.server,
@@ -56,45 +62,40 @@ app.send = function(message) {
   })
 }
 
+// adds room to roomSelect
 app.addRoom = function(room) {
   $("#roomSelect").append('<li>'+ _.escape(room) +'</li>');
 }
 
+// adds friend to friends list; invoked upon username click
 app.addFriend = function(username) {
   if (app.friends.indexOf(username) === -1) {
     app.friends.push(username);
   }
 }
 
+// if there's a submission, put it into the right format and pass it to app.send
 app.handleSubmit = function() {
-  console.log("me-ow");
   var message = {};
   message.username = $(location).attr("href").split("=")[1]; // may need to change this
   message.text = $('input').val();
   message.roomname = '';
 
   app.send(message);
-  $('input').val('');
+  $('#message').val('');
 }
 
+// initializes the app
 $(document).ready(function(){
-  app.fetch();
+  app.init();
   setInterval(function(){
     app.fetch();
   }, 1000);
 
-  // keeps the send button disabled until text is added
-  // $('button').attr('disabled', 'disabled');
-  // $('input').keyup(function() {
-  //   if ($(this).val() != '') {
-  //     $('button').removeAttr('disabled');
-  //   }
-  // });
-
   // button functionality
-  $('#send .submit').submit(function(event) {
-    app.handleSubmit();
+  $('#send').submit(function(event) {
     event.preventDefault();
+    app.handleSubmit();
   });
 
   // friend functionality
