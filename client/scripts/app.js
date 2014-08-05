@@ -1,5 +1,7 @@
 var app = {};
 app.server = "https://api.parse.com/1/classes/chatterbox";
+app.displayLength = 10;
+app.friends = [];
 
 app.init = function(){};
 
@@ -7,12 +9,14 @@ app.fetch = function(){
   $.ajax({
     url: app.server,
     type: 'GET',
-    order: 'createdAt',
+    data: 'order=-createdAt',
     contentType: 'application/json',
     success: function(data){
       console.log(data); // not necessary
       app.clearMessages();
-      app.display(data);
+      for (var i = 0; i < 10; i++) {
+        app.addMessage(data.results[i]);
+      }
     },
     error: function(){
       console.log("Error happened during fetch.");
@@ -20,14 +24,18 @@ app.fetch = function(){
   });
 };
 
-app.display = function(data){
-  for (var i = 0; i < 10; i++) {
-    $("#chats").append('<li>'
-    + _.escape(data.results[i].username)
-    + ": " + _.escape(data.results[i].text)
-    +  '</li>');
-  }
-};
+app.addMessage = function(message) {
+  // console.log(_);
+  $("#chats").append('<li>'
+                      + '<a href="#" class="username">'
+                      + _.escape(message.username)
+                      + '</a>'
+                      +": "
+                      + '<span>'
+                      + _.escape(message.text)
+                      + '</span>'
+                      +'</li>');
+}
 
 app.clearMessages = function() {
   $("#chats").empty();
@@ -48,26 +56,49 @@ app.send = function(message) {
   })
 }
 
+app.addRoom = function(room) {
+  $("#roomSelect").append('<li>'+ _.escape(room) +'</li>');
+}
 
-// app.send = function(message) {
-//   $.post(app.server,
-//     JSON.stringify(message));
-// };
+app.addFriend = function(username) {
+  if (app.friends.indexOf(username) === -1) {
+    app.friends.push(username);
+  }
+}
 
-// button functionality
-// $('button').click(function() {
-//   var message = {};
-//   message.username = Chat[_username]; // may need to change this
-//   message.text = $('input').val();
-//   message.roomname = ''; // not sure about this
+app.handleSubmit = function() {
+  console.log("me-ow");
+  var message = {};
+  message.username = $(location).attr("href").split("=")[1]; // may need to change this
+  message.text = $('input').val();
+  message.roomname = '';
 
-//   app.send(message);
-// });
-
-
+  app.send(message);
+  $('input').val('');
+}
 
 $(document).ready(function(){
+  app.fetch();
   setInterval(function(){
     app.fetch();
-  }, 3000);
+  }, 1000);
+
+  // keeps the send button disabled until text is added
+  // $('button').attr('disabled', 'disabled');
+  // $('input').keyup(function() {
+  //   if ($(this).val() != '') {
+  //     $('button').removeAttr('disabled');
+  //   }
+  // });
+
+  // button functionality
+  $('#send .submit').submit(function(event) {
+    app.handleSubmit();
+    event.preventDefault();
+  });
+
+  // friend functionality
+  $('#chats').on('click', 'a', function() {
+    app.addFriend($(this).text());
+  });
 });
